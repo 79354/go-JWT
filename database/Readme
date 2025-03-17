@@ -1,0 +1,45 @@
+client, err := mongo.Connect(ctx, options.Client().ApplyURI(MongoDb))
+
+    Connection String (MongoDB URI)
+-------------------------------------
+The MongoDb variable contains what's called a "connection string" or "URI" (Uniform Resource Identifier). This is a formatted string that includes all the information needed to connect to your MongoDB instance:
+
+mongodb+srv://username:password@cluster0.mongodb.net/dbname?retryWrites=true&w=majority
+
+This string contains:
+
+-Protocol (mongodb+srv:// - supports DNS SRV records)
+-Authentication credentials
+-Hostname/cluster address
+-Database name
+-Connection parameters as query string options
+
+
+    options.Client() Method Chain:
+----------------------------------------
+options.Client() creates a new ClientOptions struct instance which is a configuration container
+.ApplyURI(MongoDb) is a method chaining call that:
+
+-Parses the connection string
+-Fills multiple fields in the options struct (server selection, authentication, TLS, etc.)
+-Returns the modified options object itself to allow further chaining
+
+
+
+Under the hood, the ApplyURI method is:
+
+-Parsing the URI format
+-Setting dozens of internal options fields
+-Handling special protocols like mongodb+srv://
+-Configuring authentication mechanisms based on the URI
+-Setting connection pool parameters
+
+    mongo.Connect Context Behavior
+--------------------------------------
+The ctx parameter in mongo.Connect(ctx, options) does more than just timeout:
+
+-It controls the duration for initial connection establishment
+-It's propagated to internal connection pool management
+-It's used for DNS resolution if using mongodb+srv:// protocol
+-It creates "child contexts" for various internal operations
+-It carries cancellation signals to multiple goroutines working on connection setup

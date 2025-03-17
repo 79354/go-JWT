@@ -1,9 +1,11 @@
 package main
 
-import(
+import (
 	routes "go-jwt/routes"
+	"net/http"
 
 	"os"
+
 	"github.com/gin-gonic/gin"
 )
 

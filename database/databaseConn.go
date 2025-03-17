@@ -13,11 +13,13 @@ import (
 )
 
 func DBinstance() *mongo.Client{
+	// Loads the environment variables
 	err := godotenv.Load(".env")
 	if err != nil{
 		log.Fatal("Error loading the .env file")
 	}
 
+	// MongoDb conn string from env variables
 	MongoDb := os.Getenv("MONGODB_URL")
 
 	// create context with Timeout
@@ -34,7 +36,7 @@ func DBinstance() *mongo.Client{
 	if err != nil{
 		log.Fatal(err)
 	}
-	
+
 	fmt.Println("Connected to MongoDb!")
 	
 	return client
