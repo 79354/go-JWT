@@ -40,10 +40,18 @@ func GenerateAllTokens(email string, firstname string, lastname string, userType
 	}
 	
 	refreshClaims := &SignedDetails{
-		StandardClaims: jwt.StandardClaims{
+			StandardClaims: jwt.StandardClaims{
 			ExpiresAt: time.Now().Local().Add(time.Hour * time.Duration(168)).Unix()
 		},
 	}
 
-	jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+	token, err := jwt.NewWithClaims(jwt.SigningMethodHS256, claims).SignedString([]byte(SECRET_KEY))
+	refreshToken, err := jwt.NewWithClaims(jwt.SigningMethodHS256, refreshClaims).SignedString([]byte(SECRET_KEY))
+
+	if err != nil {
+		log.Panic(err)
+		return
+	}
+
+	return token, refreshToken, err
 }
