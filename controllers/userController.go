@@ -191,17 +191,23 @@ func GetUsers() gin.HandlerFunc{
 
 		// MongoDB Aggregation pipeline
 		// 1. Match docs	2. Group them	3. project only required feilds and pagination
+		// Instead of fetching everything and filtering in Go, aggregation handles it in MongoDB. Better Performance
 		pipeline := mongo.Pipeline{
-			{{"$match", bson.D{}}},
-			{{"$group", bson.D{
-				{"_id", nil},
-				{"total_count", bson.D{{"$sum", 1}}},
-				{"data", bson.D{{"$push", "$$ROOT"}}},
+			// Optional: Uncomment the following to filter only admins.
+			// bson.D{{Key: "$match", Value: bson.D{{Key: "user_type", Value: "ADMIN"}}}},
+		
+			bson.D{{Key: "$match", Value: bson.D{}}}, // Matches all users
+		
+			bson.D{{Key: "$group", Value: bson.D{
+				{Key: "_id", Value: nil}, // Groups all documents into one unit
+				{Key: "total_count", Value: bson.D{{Key: "$sum", Value: 1}}}, // Counts total users
+				{Key: "data", Value: bson.D{{Key: "$push", Value: "$$ROOT"}}}, // Pushes all users into an array
 			}}},
-			{{"$project", bson.D{
-				{"_id", 0},
-				{"total_count", 1},
-				{"user_items", bson.D{{"$slice", []interface{}{"$data", startIndex, recordPerPage}}}},
+		
+			bson.D{{Key: "$project", Value: bson.D{
+				{Key: "_id", Value: 0},
+				{Key: "total_count", Value: 1},
+				{Key: "user_items", Value: bson.D{{Key: "$slice", Value: []interface{}{"$data", startIndex, recordPerPage}}}},
 			}}},
 		}
 
@@ -213,6 +219,8 @@ func GetUsers() gin.HandlerFunc{
 		}
 
 		var results []bson.M
+
+		// decodes each document into results slice
 		if err = cursor.All(ctx, &results); err != nil{
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "error while processing user list"})
 			return
@@ -244,6 +252,20 @@ func GetUser() gin.HandlerFunc{
 		c.JSON(http.StatusOK, user)
 	}
 }
+
+/*
+	GetUsers()
+
+	MongoDB Aggregation Breakdown
+	1️⃣ $match → Matches all users (no filter applied).
+	2️⃣ $group → Groups users into a single document:
+
+	_id: "null" → Groups everything into one.
+	total_count: {"$sum": 1} → Counts total users.
+	data: {"$push": "$$ROOT"} → Stores all user data. 3️⃣ $project → Returns:
+	total_count
+	user_items (users in the requested page).
+*/
 
 /*
 	Signup
