@@ -8,6 +8,7 @@ import(
 
 func UserRoutes(incomingRoutes *gin.Engine){
 	// After login or signup, the user has a token thus middleware security is required
+	// each handler is successively called
 	incomingRoutes.Use(middleware.Authenticate())
 	incomingRoutes.GET("/users", controller.GetUsers())
 	incomingRoutes.GET("/users/:user_id", controller.GetUser())

@@ -65,15 +65,15 @@ func Signup()gin.HandlerFunc{
 
 		// validator checks for missing and required feilds
 		if err := validate.Struct(user); err != nil{
-			c.JSON(http.StatusBadRequest, gin.H{"error": validationErr.Error()})
+			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 			return
 		}
 
-		hashesPassword := HashPassword(*user.Password) // users bcrypt.GenerateFromPassword(), sercurely hash the pass before storing in database
+		hashedPassword := HashPassword(*user.Password) // users bcrypt.GenerateFromPassword(), sercurely hash the pass before storing in database
 		user.Password = &hashedPassword
 
 		// Checks if email already exists
-		emailCount, err := user.Collection.CountDocuments(ctx, bson.M{"email": user.Email})
+		emailCount, err := userCollection.CountDocuments(ctx, bson.M{"email": user.Email})
 
 		if err != nil{
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "error occured while checking for the email"})
@@ -84,7 +84,7 @@ func Signup()gin.HandlerFunc{
 		}
 
 		// Checks if phone number already exists
-		phoneCount, err = userCollection.CountDocuments(ctx, bson.D{"email": user.Phone})
+		phoneCount, err := userCollection.CountDocuments(ctx, bson.D{"email": user.Phone})
 
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "error occurred while checking for the phone"})
@@ -198,10 +198,12 @@ func GetUsers() gin.HandlerFunc{
 		
 			bson.D{{Key: "$match", Value: bson.D{}}}, // Matches all users
 		
+
+			// $group collects all users into one array and counts them.
 			bson.D{{Key: "$group", Value: bson.D{
-				{Key: "_id", Value: nil}, // Groups all documents into one unit
-				{Key: "total_count", Value: bson.D{{Key: "$sum", Value: 1}}}, // Counts total users
-				{Key: "data", Value: bson.D{{Key: "$push", Value: "$$ROOT"}}}, // Pushes all users into an array
+				{Key: "_id", Value: nil},
+				{Key: "total_count", Value: bson.D{{Key: "$sum", Value: 1}}},
+				{Key: "data", Value: bson.D{{Key: "$push", Value: "$$ROOT"}}},
 			}}},
 		
 			bson.D{{Key: "$project", Value: bson.D{
