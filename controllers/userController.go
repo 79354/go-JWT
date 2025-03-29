@@ -84,7 +84,7 @@ func Signup()gin.HandlerFunc{
 		}
 
 		// Checks if phone number already exists
-		phoneCount, err := userCollection.CountDocuments(ctx, bson.D{"email": user.Phone})
+		phoneCount, err := userCollection.CountDocuments(ctx, bson.D{"phone": user.Phone})
 
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "error occurred while checking for the phone"})
@@ -118,7 +118,7 @@ func Signup()gin.HandlerFunc{
 }
 
 func login() gin.HandlerFunc{
-	return func(c gin.Context){
+	return func(c *gin.Context){
 		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 		defer cancel()
 
@@ -143,7 +143,7 @@ func login() gin.HandlerFunc{
 			return
 		}
 
-		token, refreshToken, err := helper.GenerateAllTokens(
+		token, refreshToken, err := helpers.GenerateAllTokens(
 			*foundUser.Email,
 			*foundUser.FirstName,
 			*foundUser.LastName,
